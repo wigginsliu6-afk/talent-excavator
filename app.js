@@ -252,7 +252,7 @@ async function handleSend(){
     S.answers.push({qid:cq?cq.id:'qx'+(S.totalQ-CORE.length+1),question:cq?cq.text.substring(0,60)+'...':'追加问题',answer:text});
     S.totalQ++;
     await sleep(400);
-    if(text.length<15&&S.totalQ<10&&S.followUpCount<1){S.followUpCount++;await typeBubble(pick(FOLLOW_UPS),'ai');return}
+    if(text.length<10&&S.totalQ<10&&S.followUpCount<1){S.followUpCount++;await typeBubble(pick(FOLLOW_UPS),'ai');return}
     if(cq&&cq.fb)await typeBubble(pick(cq.fb),'ai');
     S.followUpCount=0;
     await sleep(500);
