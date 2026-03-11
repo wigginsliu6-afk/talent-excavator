@@ -6,10 +6,55 @@ cancelModal.onclick=function(){modalBg.classList.remove('show')};
 modalBg.onclick=function(e){if(e.target===modalBg)modalBg.classList.remove('show')};
 saveModal.onclick=function(){var k=apiKeyInput.value.trim();if(k){localStorage.setItem('deepseek_api_key',k);alert('API Key 已保存！')}else{localStorage.removeItem('deepseek_api_key');alert('已切换到本地分析模式。')}modalBg.classList.remove('show')};
 
-// ===== 欢迎页 → 介绍页 → 对话 =====
+// ===== 页面元素引用 =====
 var welcomeScreen=document.getElementById('welcomeScreen'),mainApp=document.getElementById('mainApp'),startBtn=document.getElementById('startBtn');
 var introScreen=document.getElementById('introScreen'),readyBtn=document.getElementById('readyBtn');
-startBtn.onclick=function(){welcomeScreen.classList.add('hidden');introScreen.style.display='flex'};
+
+// ===== 邀请码系统 =====
+var INVITE_CODES=['T6X2KM','R9F4PN','W3J7QA','B8L5VD','H2Y9CE','N4G6RF','K7M3SH','D5P8TJ','Q1V2WL','A9C4XN',
+'F6E8YP','J3H5ZR','L7K2AT','S4N9BV','U8Q1CX','G5R7DZ','M2T4EA','P9W6FC','X3Y8GE','Z1A5HG',
+'C7B3JI','E4D9KK','V6F2LM','Y8G4NO','I5H7PQ','O1J3RS','W9K5TU','A2L8VW','R4M6XY','D7N1ZA',
+'H3P9BC','T5Q2DE','N8R4FG','K1S7HI','B6T3JK','F9U5LM','J2V8NO','Q4W1PQ','X7Y3RS','L9Z6TU',
+'G1A4VW','S3B7XY','U6C2ZA','M8D5BC','P2E9DE','C4F1FG','Z7G3HI','I9H6JK','E5J8LM','Y1K4NO'];
+
+var inviteOverlay=document.getElementById('inviteOverlay'),inviteInput=document.getElementById('inviteInput'),inviteBtn=document.getElementById('inviteBtn'),inviteError=document.getElementById('inviteError');
+
+function checkInviteCode(){
+    var stored=localStorage.getItem('talent_invite_code');
+    if(stored&&INVITE_CODES.indexOf(stored.toUpperCase())>=0)return true;
+    return false;
+}
+
+inviteInput.addEventListener('input',function(){
+    this.value=this.value.replace(/[^a-zA-Z0-9]/g,'').toUpperCase();
+    inviteError.textContent='';
+});
+
+inviteInput.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();verifyInvite()}});
+
+inviteBtn.onclick=verifyInvite;
+
+function verifyInvite(){
+    var code=inviteInput.value.trim().toUpperCase();
+    if(!code){inviteError.textContent='请输入邀请码';return}
+    if(code.length!==6){inviteError.textContent='邀请码为6位，请检查';return}
+    if(INVITE_CODES.indexOf(code)<0){inviteError.textContent='邀请码无效，请重新输入';inviteInput.value='';inviteInput.focus();return}
+    localStorage.setItem('talent_invite_code',code);
+    inviteOverlay.classList.remove('show');
+    welcomeScreen.classList.add('hidden');
+    introScreen.style.display='flex';
+}
+
+// ===== 欢迎页 → 介绍页 → 对话 =====
+startBtn.onclick=function(){
+    if(checkInviteCode()){
+        welcomeScreen.classList.add('hidden');
+        introScreen.style.display='flex';
+    }else{
+        inviteOverlay.classList.add('show');
+        setTimeout(function(){inviteInput.focus()},300);
+    }
+};
 readyBtn.onclick=function(){introScreen.classList.add('hidden');mainApp.style.display='flex';setTimeout(startFromFirstQuestion,600)};
 
 // ===== DOM =====
@@ -207,7 +252,7 @@ async function handleSend(){
     S.answers.push({qid:cq?cq.id:'qx'+(S.totalQ-CORE.length+1),question:cq?cq.text.substring(0,60)+'...':'追加问题',answer:text});
     S.totalQ++;
     await sleep(400);
-    if(text.length<20&&S.totalQ<10&&S.followUpCount<1){S.followUpCount++;await typeBubble(pick(FOLLOW_UPS),'ai');return}
+    if(text.length<15&&S.totalQ<10&&S.followUpCount<1){S.followUpCount++;await typeBubble(pick(FOLLOW_UPS),'ai');return}
     if(cq&&cq.fb)await typeBubble(pick(cq.fb),'ai');
     S.followUpCount=0;
     await sleep(500);
@@ -251,7 +296,7 @@ async function genWithAI(apiKey){
     return shell(data.choices[0].message.content);
 }
 
-function shell(body){return '<div class="rpt-cover"><span class="deco">🔮</span><h1>《个人天赋使用说明书》</h1><p class="sub">深度对话结晶 · '+S.totalQ+' 轮挖掘 · '+new Date().toLocaleDateString('zh-CN')+'</p></div><div class="rpt-text">'+body+'</div><div class="rpt-actions"><button class="primary" onclick="saveReportAsImage()">📷 保存为图片</button></div>'}
+function shell(body){return '<div class="rpt-cover"><span class="deco">🔮</span><h1>《个人天赋使用说明书》</h1><p class="sub">深度对话结晶 · '+S.totalQ+' 轮挖掘 · '+new Date().toLocaleDateString('zh-CN')+'</p></div><div class="rpt-text">'+body+'</div>'}
 
 function showReport(html){reportContent.innerHTML=html;reportOverlay.classList.add('show');document.body.style.overflow='hidden';reportOverlay.scrollTop=0}
 
@@ -429,7 +474,7 @@ function genLocal(){
     R+='<p style="font-size:.85rem;color:var(--t3);margin-top:1.5rem;text-align:center;">本报告生成于 '+new Date().toLocaleString('zh-CN')+' | 对话轮次：'+S.totalQ+' 轮<br>基于盖洛普优势理论、心流理论、荣格阴影心理学及认知科学综合分析</p>';
     R+='</div></div>';
 
-    R+='<div class="rpt-actions"><button class="primary" onclick="saveReportAsImage()">📷 保存为图片</button></div>';
+    R+='<div class="rpt-actions"></div>';
     return R;
 }
 
