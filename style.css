@@ -18,6 +18,21 @@ body{background:var(--bg);color:var(--t1);font-family:'Noto Sans SC',-apple-syst
 .welcome-start:hover{transform:scale(1.06);box-shadow:0 15px 50px -10px var(--gp)}
 .welcome-start:active{transform:scale(.98)}
 
+.invite-overlay{position:fixed;inset:0;z-index:5100;background:rgba(8,8,16,.92);backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center;padding:1.5rem}
+.invite-overlay.show{display:flex}
+.invite-card{background:linear-gradient(145deg,rgba(30,30,50,.95),rgba(20,20,35,.98));border:1px solid rgba(255,255,255,.08);border-radius:1.2rem;padding:2.5rem 2rem;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:mp .3s ease}
+.invite-icon{font-size:3rem;margin-bottom:1rem}
+.invite-card h2{font-family:'Noto Serif SC',serif;font-size:1.4rem;margin-bottom:.6rem;background:linear-gradient(135deg,#fff,var(--t2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.invite-card>p{color:var(--t3);font-size:.88rem;margin-bottom:1.5rem;line-height:1.6}
+.invite-card input{width:100%;padding:.85rem 1rem;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:.7rem;color:var(--t1);font-size:1.2rem;text-align:center;letter-spacing:6px;font-weight:600;text-transform:uppercase;transition:border-color .3s}
+.invite-card input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 20px rgba(139,92,246,.15)}
+.invite-card input::placeholder{letter-spacing:2px;font-size:.9rem;font-weight:400;color:var(--t3)}
+.invite-error{color:var(--red);font-size:.82rem;min-height:1.5rem;margin-top:.5rem;transition:opacity .3s}
+.invite-btn{width:100%;margin-top:.8rem;background:linear-gradient(135deg,var(--purple),var(--pink));border:none;color:#fff;padding:.9rem;border-radius:100px;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 8px 30px -8px var(--gp);transition:all .3s}
+.invite-btn:hover{transform:scale(1.03);box-shadow:0 12px 40px -8px var(--gp)}
+.invite-btn:active{transform:scale(.97)}
+.invite-btn:disabled{background:#334155;cursor:not-allowed;transform:none;box-shadow:none}
+
 .intro-screen{position:fixed;inset:0;z-index:4800;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:2rem;padding-top:3vh;transition:opacity .8s,visibility .8s;overflow-y:auto}
 .intro-screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
 .intro-content{max-width:560px;width:100%;text-align:left}
