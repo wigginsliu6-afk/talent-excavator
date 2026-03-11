@@ -18,10 +18,12 @@ body{background:var(--bg);color:var(--t1);font-family:'Noto Sans SC',-apple-syst
 .welcome-start:hover{transform:scale(1.06);box-shadow:0 15px 50px -10px var(--gp)}
 .welcome-start:active{transform:scale(.98)}
 
-.intro-screen{position:fixed;inset:0;z-index:4800;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;transition:opacity .8s,visibility .8s;overflow-y:auto}
+.intro-screen{position:fixed;inset:0;z-index:4800;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:2rem;padding-top:3vh;transition:opacity .8s,visibility .8s;overflow-y:auto}
 .intro-screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
 .intro-content{max-width:560px;width:100%;text-align:left}
-.intro-content .intro-icon{font-size:2.5rem;text-align:center;margin-bottom:1.5rem}
+.intro-content .intro-icon{font-size:5rem;text-align:center;margin-bottom:1.5rem;line-height:1;background:none;border:none;outline:none}
+.star-icon{display:inline-block;font-style:normal;font-size:5rem;background:linear-gradient(135deg,var(--purple-l),var(--pink),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 20px rgba(139,92,246,.5)) drop-shadow(0 0 40px rgba(236,72,153,.3));animation:starGlow 3s ease-in-out infinite}
+@keyframes starGlow{0%,100%{filter:drop-shadow(0 0 20px rgba(139,92,246,.5)) drop-shadow(0 0 40px rgba(236,72,153,.3));transform:scale(1)}50%{filter:drop-shadow(0 0 30px rgba(139,92,246,.7)) drop-shadow(0 0 50px rgba(236,72,153,.5));transform:scale(1.05)}}
 .intro-content p{color:var(--t2);font-size:1rem;line-height:2;margin-bottom:1rem}
 .intro-content strong{color:var(--pink-l);font-weight:600}
 .intro-ready-btn{display:block;width:100%;max-width:320px;margin:2rem auto 0;background:linear-gradient(135deg,var(--purple),var(--pink));border:none;color:#fff;padding:1rem 2rem;border-radius:100px;font-size:1.1rem;font-weight:700;cursor:pointer;box-shadow:0 10px 40px -10px var(--gp);transition:all .3s}

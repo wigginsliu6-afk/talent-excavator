@@ -6,6 +6,7 @@
 <title>深度天赋挖掘机 | 发现你的生命密码</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;900&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
 // 在DOM渲染前，微信浏览器立即注入隐藏麦克风的样式
 if(/MicroMessenger/i.test(navigator.userAgent)){
@@ -24,18 +25,19 @@ if(/MicroMessenger/i.test(navigator.userAgent)){
         <div class="welcome-feat"><div class="icon">🧠</div><div class="label">盖洛普优势理论</div></div>
         <div class="welcome-feat"><div class="icon">🌊</div><div class="label">心流理论</div></div>
         <div class="welcome-feat"><div class="icon">🪞</div><div class="label">荣格心理学</div></div>
+        <div class="welcome-feat"><div class="icon">🔬</div><div class="label">认知科学</div></div>
     </div>
     <button class="welcome-start" id="startBtn">开始探索我的天赋</button>
 </div>
 <div class="intro-screen" id="introScreen" style="display:none;">
     <div class="intro-content">
-        <div class="intro-icon">✨</div>
-        <p>你好，我是 <strong>深度天赋挖掘机</strong> 。</p>
+        <div class="intro-icon"><span class="star-icon">✦</span></div>
         <p>我发现一个有趣的现象：很多人的焦虑，源于在不擅长的赛道上拼命，却忽视了那些"出厂自带"的能量。</p>
         <p><strong>天赋永远不会过期，我们只是要找到你的基础天赋。</strong></p>
-        <p>接下来大约 15 分钟，我会通过 4-10 个深度问题，陪你潜入记忆深处。我的方法融合了盖洛普优势理论、心流理论和荣格心理学。</p>
+        <p>接下来大约 10 分钟，我会通过 5-8 个深度问题，陪你潜入记忆深处。</p>
         <p>过程中请尽量诚实——天赋往往藏在你最不以为然的地方。</p>
         <p>最终，我会为你生成一份详尽的 <strong>《个人天赋使用说明书》</strong> ，帮助你找到真正的基础天赋。</p>
+        <p><strong>温馨提示：</strong>通过语音输入更方便，描述时可以说案例1、案例2...</p>
         <button class="intro-ready-btn" id="readyBtn">准备好了</button>
     </div>
 </div>
