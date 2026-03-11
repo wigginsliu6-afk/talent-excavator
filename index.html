@@ -29,6 +29,16 @@ if(/MicroMessenger/i.test(navigator.userAgent)){
     </div>
     <button class="welcome-start" id="startBtn">开始探索我的天赋</button>
 </div>
+<div class="invite-overlay" id="inviteOverlay">
+    <div class="invite-card">
+        <div class="invite-icon">🔑</div>
+        <h2>输入邀请码</h2>
+        <p>请输入6位邀请码以解锁天赋探索之旅</p>
+        <input type="text" id="inviteInput" maxlength="6" placeholder="请输入邀请码" autocomplete="off" spellcheck="false">
+        <div class="invite-error" id="inviteError"></div>
+        <button class="invite-btn" id="inviteBtn">验证并进入</button>
+    </div>
+</div>
 <div class="intro-screen" id="introScreen" style="display:none;">
     <div class="intro-content">
         <div class="intro-icon"><span class="star-icon">✦</span></div>
