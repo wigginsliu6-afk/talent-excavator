@@ -19,7 +19,7 @@ var loadingOverlay=document.getElementById('loadingOverlay'),loadingText=documen
 var reportOverlay=document.getElementById('reportOverlay'),reportContent=document.getElementById('reportContent');
 
 // ===== 状态 =====
-var S={step:0,totalQ:0,answers:[],typing:false,complete:false,generating:false};
+var S={step:0,totalQ:0,answers:[],typing:false,complete:false,generating:false,followUpCount:0};
 
 // ===== 问题库 =====
 var CORE=[
@@ -207,8 +207,9 @@ async function handleSend(){
     S.answers.push({qid:cq?cq.id:'qx'+(S.totalQ-CORE.length+1),question:cq?cq.text.substring(0,60)+'...':'追加问题',answer:text});
     S.totalQ++;
     await sleep(400);
-    if(text.length<40&&S.totalQ<10){await typeBubble(pick(FOLLOW_UPS),'ai');return}
+    if(text.length<20&&S.totalQ<10&&S.followUpCount<1){S.followUpCount++;await typeBubble(pick(FOLLOW_UPS),'ai');return}
     if(cq&&cq.fb)await typeBubble(pick(cq.fb),'ai');
+    S.followUpCount=0;
     await sleep(500);
     if(ci<CORE.length-1){await askCore(ci+1)}
     else if(ci===CORE.length-1){S.step=CORE.length;updateProgress();
@@ -250,7 +251,7 @@ async function genWithAI(apiKey){
     return shell(data.choices[0].message.content);
 }
 
-function shell(body){return '<div class="rpt-cover"><span class="deco">🔮</span><h1>《个人天赋使用说明书》</h1><p class="sub">深度对话结晶 · '+S.totalQ+' 轮挖掘 · '+new Date().toLocaleDateString('zh-CN')+'</p></div><div class="rpt-text">'+body+'</div><div class="rpt-actions"><button class="primary" onclick="window.print()">🖨️ 打印保存</button><button class="secondary" onclick="location.reload()">🔄 重新探索</button></div>'}
+function shell(body){return '<div class="rpt-cover"><span class="deco">🔮</span><h1>《个人天赋使用说明书》</h1><p class="sub">深度对话结晶 · '+S.totalQ+' 轮挖掘 · '+new Date().toLocaleDateString('zh-CN')+'</p></div><div class="rpt-text">'+body+'</div><div class="rpt-actions"><button class="primary" onclick="saveReportAsImage()">📷 保存为图片</button></div>'}
 
 function showReport(html){reportContent.innerHTML=html;reportOverlay.classList.add('show');document.body.style.overflow='hidden';reportOverlay.scrollTop=0}
 
@@ -428,8 +429,77 @@ function genLocal(){
     R+='<p style="font-size:.85rem;color:var(--t3);margin-top:1.5rem;text-align:center;">本报告生成于 '+new Date().toLocaleString('zh-CN')+' | 对话轮次：'+S.totalQ+' 轮<br>基于盖洛普优势理论、心流理论、荣格阴影心理学及认知科学综合分析</p>';
     R+='</div></div>';
 
-    R+='<div class="rpt-actions"><button class="primary" onclick="window.print()">🖨️ 打印保存</button><button class="secondary" onclick="location.reload()">🔄 重新探索</button></div>';
+    R+='<div class="rpt-actions"><button class="primary" onclick="saveReportAsImage()">📷 保存为图片</button></div>';
     return R;
 }
+
+// ===== 保存报告为图片 =====
+window.saveReportAsImage=function(){
+    var rpt=document.getElementById('reportContent');
+    var btn=rpt.querySelector('.rpt-actions');
+    if(btn)btn.style.display='none';
+    // 记录原始滚动位置
+    var overlay=document.getElementById('reportOverlay');
+    var origScroll=overlay.scrollTop;
+    overlay.scrollTop=0;
+    // 显示生成提示
+    var tip=document.createElement('div');
+    tip.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.85);color:#fff;padding:1.2rem 2rem;border-radius:1rem;font-size:1rem;z-index:99999;text-align:center;';
+    tip.textContent='正在生成长图，请稍候...';
+    document.body.appendChild(tip);
+
+    setTimeout(function(){
+        html2canvas(rpt,{
+            useCORS:true,
+            allowTaint:true,
+            scale:2,
+            backgroundColor:'#0f172a',
+            scrollX:0,
+            scrollY:0,
+            windowWidth:rpt.scrollWidth,
+            windowHeight:rpt.scrollHeight,
+            width:rpt.scrollWidth,
+            height:rpt.scrollHeight
+        }).then(function(canvas){
+            if(btn)btn.style.display='';
+            overlay.scrollTop=origScroll;
+            document.body.removeChild(tip);
+            // 创建下载链接
+            var link=document.createElement('a');
+            link.download='我的天赋使用说明书.png';
+            link.href=canvas.toDataURL('image/png');
+            // 移动端长按保存引导
+            var isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if(isMobile){
+                // 移动端：显示图片让用户长按保存
+                var imgOverlay=document.createElement('div');
+                imgOverlay.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.92);z-index:99998;display:flex;flex-direction:column;align-items:center;overflow-y:auto;-webkit-overflow-scrolling:touch;';
+                var tipBar=document.createElement('div');
+                tipBar.style.cssText='position:sticky;top:0;width:100%;background:rgba(0,0,0,.9);text-align:center;padding:.8rem;color:#fff;font-size:.95rem;z-index:2;backdrop-filter:blur(10px);';
+                tipBar.innerHTML='<strong>长按下方图片保存到手机相册</strong>';
+                var closeBtn=document.createElement('button');
+                closeBtn.textContent='关闭';
+                closeBtn.style.cssText='position:fixed;top:.8rem;right:1rem;z-index:99999;background:rgba(255,255,255,.15);color:#fff;border:none;padding:.5rem 1.2rem;border-radius:.5rem;font-size:.9rem;';
+                closeBtn.onclick=function(){document.body.removeChild(imgOverlay)};
+                var img=document.createElement('img');
+                img.src=canvas.toDataURL('image/png');
+                img.style.cssText='width:100%;max-width:750px;margin:1rem auto;display:block;';
+                imgOverlay.appendChild(tipBar);
+                imgOverlay.appendChild(closeBtn);
+                imgOverlay.appendChild(img);
+                document.body.appendChild(imgOverlay);
+            }else{
+                // PC端：直接下载
+                link.click();
+            }
+        }).catch(function(err){
+            console.error('截图失败:',err);
+            if(btn)btn.style.display='';
+            overlay.scrollTop=origScroll;
+            document.body.removeChild(tip);
+            alert('图片生成失败，请重试');
+        });
+    },100);
+};
 
 })();
