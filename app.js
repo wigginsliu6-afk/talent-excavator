@@ -1,29 +1,85 @@
 (function(){
-// ===== 设置弹窗 =====
-var settingsBtn=document.getElementById('settingsBtn'),modalBg=document.getElementById('modalBg'),apiKeyInput=document.getElementById('apiKeyInput'),saveModal=document.getElementById('saveModal'),cancelModal=document.getElementById('cancelModal');
-settingsBtn.onclick=function(){apiKeyInput.value=localStorage.getItem('deepseek_api_key')||'';modalBg.classList.add('show')};
-cancelModal.onclick=function(){modalBg.classList.remove('show')};
-modalBg.onclick=function(e){if(e.target===modalBg)modalBg.classList.remove('show')};
-saveModal.onclick=function(){var k=apiKeyInput.value.trim();if(k){localStorage.setItem('deepseek_api_key',k);alert('API Key 已保存！')}else{localStorage.removeItem('deepseek_api_key');alert('已切换到本地分析模式。')}modalBg.classList.remove('show')};
 
 // ===== 页面元素引用 =====
 var welcomeScreen=document.getElementById('welcomeScreen'),mainApp=document.getElementById('mainApp'),startBtn=document.getElementById('startBtn');
 var introScreen=document.getElementById('introScreen'),readyBtn=document.getElementById('readyBtn');
 
-// ===== 邀请码系统 =====
-var INVITE_CODES=['T6X2KM','R9F4PN','W3J7QA','B8L5VD','H2Y9CE','N4G6RF','K7M3SH','D5P8TJ','Q1V2WL','A9C4XN',
-'F6E8YP','J3H5ZR','L7K2AT','S4N9BV','U8Q1CX','G5R7DZ','M2T4EA','P9W6FC','X3Y8GE','Z1A5HG',
-'C7B3JI','E4D9KK','V6F2LM','Y8G4NO','I5H7PQ','O1J3RS','W9K5TU','A2L8VW','R4M6XY','D7N1ZA',
-'H3P9BC','T5Q2DE','N8R4FG','K1S7HI','B6T3JK','F9U5LM','J2V8NO','Q4W1PQ','X7Y3RS','L9Z6TU',
-'G1A4VW','S3B7XY','U6C2ZA','M8D5BC','P2E9DE','C4F1FG','Z7G3HI','I9H6JK','E5J8LM','Y1K4NO'];
+// ===== 浏览器指纹系统 =====
+function getDeviceFingerprint(){
+    var components=[];
+    // Screen
+    components.push(screen.width+'x'+screen.height+'x'+screen.colorDepth);
+    // 时区
+    components.push(Intl.DateTimeFormat().resolvedOptions().timeZone||'');
+    components.push(new Date().getTimezoneOffset());
+    // 平台 & 语言
+    components.push(navigator.platform||'');
+    components.push(navigator.language||'');
+    components.push(navigator.hardwareConcurrency||0);
+    // Canvas 指纹
+    try{
+        var cv=document.createElement('canvas');cv.width=200;cv.height=50;
+        var ctx=cv.getContext('2d');
+        ctx.textBaseline='top';
+        ctx.font='14px Arial';ctx.fillStyle='#f60';ctx.fillRect(50,0,80,30);
+        ctx.fillStyle='#069';ctx.fillText('Talent2026!@#',2,15);
+        ctx.fillStyle='rgba(102,204,0,0.7)';ctx.fillText('Talent2026!@#',4,17);
+        components.push(cv.toDataURL().slice(-50));
+    }catch(e){components.push('no-canvas')}
+    // WebGL 渲染器
+    try{
+        var gl=document.createElement('canvas').getContext('webgl');
+        var dbg=gl.getExtension('WEBGL_debug_renderer_info');
+        if(dbg){components.push(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL)||'')}
+        else{components.push('no-webgl-dbg')}
+    }catch(e){components.push('no-webgl')}
+    return components.join('|||');
+}
+
+async function hashStr(str){
+    var buf=new TextEncoder().encode(str);
+    var hb=await crypto.subtle.digest('SHA-256',buf);
+    return Array.from(new Uint8Array(hb)).map(function(b){return b.toString(16).padStart(2,'0')}).join('');
+}
+
+async function getFingerprint(){
+    var raw=getDeviceFingerprint();
+    var full=await hashStr(raw);
+    return full.substring(0,32);
+}
+
+// ===== 邀请码系统（哈希混淆） =====
+var _IC=['96b383e595e3d0e5','1967e752d0fbbaf1','133a091030bfa747','c9414242bb2ebc8b','2be31a6ad529f6ac','d9f3a76631f198f6','c8c1ca2c784a5fc3','372952f0ca7eedf3','353f8b37c8a838dd','6e4f1453438bc524','f60fdac7b9f44333','896eabade2ef6ea5','fa1c84bd1dd93dc4','034ee305c67a6056','1495792fb77a0750','609ca9b159594f48','27187e6da30739a2','6fd0db11b932927a','e1438dc29f201726','b51c43ef96e272df','dc0ea0256bf31d8d','ae4f86a46f560a98','27a2ec838dc09929','5b7da9a7a57d79dd','e593de78f9efb3f3','b538efe50cacd8e8','451f595707ad6d5c','cd5a8609e03bc816','73c392693b3fde1f','bd350c35a9f6158f','34e69376d3e15fe0','ad292d22c244538a','683407a7eb38904e','aa88b80cda06d3c8','121811faf364b0e3','959787d9e322e79a','584dbe1b6d6baaaa','e41acee0db1ad7f8','5797641a58dd7225','3cae7c104a1d7ad7','bde4d2aaadaf843e','43edda684c25a90e','d627d75c2797dcf3','34690d02e18653e2','3d160ee8404ce432','082d7e825b3f9cfe','82cbc89dcc13784c','e1776ee6774ea760','9bce5b0ac7793f16','a6e313aa9a8d7e93'];
+var _SALT='TALENT_SALT_2026_';
+
+async function hashCode(code){
+    var full=await hashStr(_SALT+code);
+    return full.substring(0,16);
+}
+
+async function isValidCode(code){
+    var h=await hashCode(code);
+    return _IC.indexOf(h)>=0;
+}
+
+// ===== 设备绑定存储 =====
+// localStorage 存储格式：talent_bind_{codeHash} = fingerprint
+// 验证流程：码有效 → 检查是否已被其他设备绑定 → 绑定当前设备
+
+async function checkStoredInvite(){
+    var stored=localStorage.getItem('talent_invite_code');
+    if(!stored)return false;
+    var valid=await isValidCode(stored.toUpperCase());
+    if(!valid)return false;
+    // 检查指纹匹配
+    var ch=await hashCode(stored.toUpperCase());
+    var boundFp=localStorage.getItem('talent_bind_'+ch);
+    if(!boundFp)return true; // 旧用户无指纹记录，放行
+    var currentFp=await getFingerprint();
+    return boundFp===currentFp;
+}
 
 var inviteOverlay=document.getElementById('inviteOverlay'),inviteInput=document.getElementById('inviteInput'),inviteBtn=document.getElementById('inviteBtn'),inviteError=document.getElementById('inviteError');
-
-function checkInviteCode(){
-    var stored=localStorage.getItem('talent_invite_code');
-    if(stored&&INVITE_CODES.indexOf(stored.toUpperCase())>=0)return true;
-    return false;
-}
 
 inviteInput.addEventListener('input',function(){
     this.value=this.value.replace(/[^a-zA-Z0-9]/g,'').toUpperCase();
@@ -34,23 +90,42 @@ inviteInput.addEventListener('keydown',function(e){if(e.key==='Enter'){e.prevent
 
 inviteBtn.onclick=verifyInvite;
 
-function verifyInvite(){
+async function verifyInvite(){
     var code=inviteInput.value.trim().toUpperCase();
     if(!code){inviteError.textContent='请输入邀请码';return}
     if(code.length!==6){inviteError.textContent='邀请码为6位，请检查';return}
-    if(INVITE_CODES.indexOf(code)<0){inviteError.textContent='邀请码无效，请重新输入';inviteInput.value='';inviteInput.focus();return}
-    localStorage.setItem('talent_invite_code',code);
-    inviteOverlay.classList.remove('show');
-    welcomeScreen.classList.add('hidden');
-    introScreen.style.display='flex';
+    // 禁用按钮防重复
+    inviteBtn.disabled=true;inviteBtn.textContent='验证中...';
+    try{
+        var valid=await isValidCode(code);
+        if(!valid){inviteError.textContent='邀请码无效，请重新输入';inviteInput.value='';inviteInput.focus();return}
+        // 获取当前设备指纹
+        var currentFp=await getFingerprint();
+        var ch=await hashCode(code);
+        var boundFp=localStorage.getItem('talent_bind_'+ch);
+        if(boundFp&&boundFp!==currentFp){
+            inviteError.textContent='该邀请码已在其他设备上使用';
+            inviteInput.value='';inviteInput.focus();
+            return;
+        }
+        // 绑定设备
+        localStorage.setItem('talent_bind_'+ch,currentFp);
+        localStorage.setItem('talent_invite_code',code);
+        inviteOverlay.classList.remove('show');
+        welcomeScreen.classList.add('hidden');
+        introScreen.style.display='flex';
+    }finally{inviteBtn.disabled=false;inviteBtn.textContent='验证并进入'}
 }
 
 // ===== 欢迎页 → 介绍页 → 对话 =====
-startBtn.onclick=function(){
-    if(checkInviteCode()){
+startBtn.onclick=async function(){
+    var ok=await checkStoredInvite();
+    if(ok){
         welcomeScreen.classList.add('hidden');
         introScreen.style.display='flex';
     }else{
+        // 清除无效的存储
+        localStorage.removeItem('talent_invite_code');
         inviteOverlay.classList.add('show');
         setTimeout(function(){inviteInput.focus()},300);
     }
@@ -276,23 +351,37 @@ async function finishDialog(){
 sendBtn.onclick=handleSend;
 userInput.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handleSend()}});
 
+// ===== 内置 API Key（混淆存储） =====
+var _$k=[115,107,45,99,102,101,53,101,55,50,53,102,57,57,54,52,98,97,56,56,51,53,99,100,99,53,49,55,100,55,52,54,55,49,50];
+function _dk(){return _$k.map(function(c){return String.fromCharCode(c)}).join('')}
+
+function getApiKey(){return _dk()}
+
 // ===== 报告生成 =====
 async function generateReport(){
     S.generating=true;loadingOverlay.classList.add('show');loadingFillEl.style.width='0%';
     var msgs=['正在解析你的核心底色...','正在构建认知地图...','正在拆解心理表征模式...','正在进行阴影炼金术...','正在审计能量模式...','正在规划人生支点...','正在生成职业匹配分析...','正在撰写给未来你的信...','最终整合中，即将完成...'];
     var mi=0;var iv=setInterval(function(){if(mi<msgs.length){loadingText.textContent=msgs[mi];loadingFillEl.style.width=((mi+1)/msgs.length*95)+'%';mi++}},1200);
     try{
-        var apiKey=localStorage.getItem('deepseek_api_key');var html;
-        if(apiKey){html=await genWithAI(apiKey)}else{await sleep(msgs.length*1200+500);html=genLocal()}
+        var apiKey=getApiKey();var html;
+        html=await genWithAI(apiKey);
         clearInterval(iv);loadingFillEl.style.width='100%';await sleep(500);showReport(html);
-    }catch(e){clearInterval(iv);console.error(e);showReport(genLocal())}finally{loadingOverlay.classList.remove('show');S.generating=false}
+    }catch(e){
+        console.error('AI生成失败，回退到本地分析:',e);
+        clearInterval(iv);
+        loadingText.textContent='AI服务暂时不可用，正在使用本地智能分析...';
+        await sleep(1500);
+        showReport(genLocal());
+    }finally{loadingOverlay.classList.remove('show');S.generating=false}
 }
 
 async function genWithAI(apiKey){
     var at=S.answers.map(function(a,i){return '问题'+(i+1)+' ('+a.qid+'): '+a.question+'\n用户回答: '+a.answer}).join('\n\n');
     var prompt='你是一位融合了盖洛普优势、心流理论、荣格阴影心理学及认知科学（心理表征）的顶尖生涯咨询师。你坚信天赋是一个人处理信息的"出厂设置"，它藏在偏见、怪癖和最不费力的直觉里。\n\n核心理念：\n- 天赋即直觉：真正的天赋是由于大脑中形成了极高分辨率的"心理表征"，导致看世界的方式和他人不同。\n- 能量审计：天赋不看"结果好坏"，而看"过程是否回血"。\n- 阴影转化：所有的"顽固缺点"都是放错了位置的天赋。\n\n请基于以下对话生成一份不低于一万字的《个人天赋使用说明书》。\n\n报告结构要求：\n1)【核心底色】用一个深刻的隐喻定义用户的底层天赋（如：精密的时钟、深海的雷达）\n2)【认知地图解析】拆解用户大脑的"编码模式"，告知他为何在某些事上具有天然优势\n3)【阴影炼金术】将用户的"缺点"重塑为可以实操的武器库\n4)【能量补给指南】列出哪些环境是"能量场"，哪些是"黑洞"\n5)【人生支点建议】给出极其详细的职业、社交及生活建议，告诉他如何"顺着天赋活"\n6)【写给未来的你】一封温暖而犀利的信\n\n格式要求：使用HTML格式，段落用<p>标题用<h3>强调用<strong>，每个模块用<div class="rpt-section">包裹。语调专业且充满洞察力，需要达到他的内心，让他真的觉得有用。\n\n用户对话：\n'+at;
     var resp=await fetch('https://api.deepseek.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:'你是一位融合了盖洛普优势、心流理论、荣格阴影心理学及认知科学的顶尖生涯咨询师。请用HTML格式生成万字深度报告。语调温暖共情但犀利有洞察力，要真正触达用户内心。'},{role:'user',content:prompt}],temperature:0.85,max_tokens:8000})});
-    if(!resp.ok)throw new Error('API fail');var data=await resp.json();
+    if(!resp.ok)throw new Error('API请求失败: '+resp.status);
+    var data=await resp.json();
+    if(!data.choices||!data.choices[0]||!data.choices[0].message)throw new Error('API返回数据异常');
     return shell(data.choices[0].message.content);
 }
 
